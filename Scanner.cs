@@ -81,10 +81,16 @@ public class Scanner
             case '\n':
                 line++;
                 break;
+
+            default:
+                if (IsDigit(c))
+                {
+                    ScanNumber();
+                }
+                break;
         }
     }
 
-  
     private void ScanNumber()
     {
         while (IsDigit(Peek()))
@@ -105,10 +111,6 @@ public class Scanner
         {
             AddToken(TokenType.NUMBER, value);
         }
-        else
-        {
-            Error("Invalid number.");
-        }
     }
 
     private bool IsAtEnd()
@@ -121,9 +123,36 @@ public class Scanner
         return source[current++];
     }
 
+    private char Peek()
+    {
+        if (IsAtEnd())
+            return '\0';
+
+        return source[current];
+    }
+
+    private char PeekNext()
+    {
+        if (current + 1 >= source.Length)
+            return '\0';
+
+        return source[current + 1];
+    }
+
+    private static bool IsDigit(char c)
+    {
+        return c >= '0' && c <= '9';
+    }
+
     private void AddToken(TokenType type)
     {
         string text = source.Substring(start, current - start);
         tokens.Add(new Token(type, text, null, line));
+    }
+
+    private void AddToken(TokenType type, object? literal)
+    {
+        string text = source.Substring(start, current - start);
+        tokens.Add(new Token(type, text, literal, line));
     }
 }
