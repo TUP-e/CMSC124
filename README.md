@@ -1,4 +1,4 @@
-# COLTISH
+# COLLECTIVE
 
 ## Creators
 
@@ -30,16 +30,15 @@ The inspiration and target users for this language are aspiring game developers 
 | `./run` | [Starts the REPL.] |
 
 
-Exit codes: 0 [when], 65 [when], 70 [when].
+Exit codes:
+
+- `0` — successful execution.
+- `65` — lexical or syntax error.
+- `70` — runtime error.
 
 ## File extension
 
-`[.colt]` [Must match the `colt` field in every tests/lab*/manifest.json.]
-
-## Lexical structure
-
-Collective uses a simple, dynamically typed lexical structure designed for beginner-friendly game development and object-oriented programming. Source code is divided into tokens by scanning the input from left to right. Whitespace and comments are ignored except when newlines are needed for line tracking. The scanner recognizes punctuation, operators, literals, identifiers, reserved keywords, and the end-of-file marker.
-
+`[.colt]` [Must match the `ext` field in every tests/lab*/manifest.json.]
 
 ## Lexical structure
 
@@ -101,6 +100,17 @@ Operator precedence and associativity will be finalized in the grammar later on.
 | nil     | `nil`           | The language's value representing the absence of a value.            |
 
 ` Numbers support integer and decimal forms. Strings use double quotes. The scanner preserves the source lexeme while storing the interpreted literal value separately in the token.`
+
+Strings support the following escape sequences:
+
+| Escape | Meaning |
+|---|---|
+| `\n` | newline |
+| `\t` | tab |
+| `\"` | double quote |
+| `\\` | backslash |
+
+Strings cannot span multiple lines.
 
 ### Identifiers
 
