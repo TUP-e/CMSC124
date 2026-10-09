@@ -22,6 +22,10 @@ if (args[0] == "--tokenize")
 
         if (scanner.HadError)
         {
+            Console.Error.WriteLine(
+                $"Scanning reached the end of the file (line {tokens[^1].Line}): " +
+                $"{tokens.Count - 1} valid token(s), {scanner.ErrorCount} error(s).");
+
             Environment.ExitCode = 65;
             return;
         }

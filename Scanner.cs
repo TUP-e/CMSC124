@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 public class Scanner
@@ -9,7 +10,13 @@ public class Scanner
     private int current = 0;
     private int line = 1;
 
-    public bool HadError { get; private set; }
+    // Tracks line start and token start positions for accurate error columns.
+    private int lineStart = 0;
+    private int startColumn = 1;
+
+    // HadError used to be a plain bool, now we count the errors too
+    public int ErrorCount { get; private set; }
+    public bool HadError => ErrorCount > 0;
 
     private static readonly Dictionary<string, TokenType> Keywords =
         new()
@@ -46,6 +53,7 @@ public class Scanner
         while (!IsAtEnd())
         {
             start = current;
+            startColumn = current - lineStart + 1;
             ScanToken();
         }
 
@@ -78,7 +86,11 @@ public class Scanner
                 break;
 
             case '.':
-                AddToken(TokenType.DOT);
+                // Handles decimal numbers starting with a dot or treats it as a member-access DOT.
+                if (IsDigit(Peek()))
+                    ScanNumber();
+                else
+                    AddToken(TokenType.DOT);
                 break;
 
             case ',':
@@ -139,6 +151,7 @@ public class Scanner
 
             case '\n':
                 line++;
+                lineStart = current;
                 break;
 
             // String
@@ -157,7 +170,7 @@ public class Scanner
                 }
                 else
                 {
-                    Error("Unexpected character.");
+                    Error($"Unexpected character '{c}'.");
                 }
 
                 break;
@@ -184,9 +197,11 @@ public class Scanner
 
             if (c == '\\')
             {
+                int backslashColumn = current - lineStart + 1;
                 Advance();
 
-                if (IsAtEnd())
+                // Treats trailing backslashes at line ends as unterminated strings.
+                if (IsAtEnd() || Peek() == '\n')
                 {
                     Error("Unterminated string.");
                     return;
@@ -213,7 +228,7 @@ public class Scanner
                         break;
 
                     default:
-                        Error($"Invalid escape sequence '\\{escaped}'.");
+                        Error($"Invalid escape sequence '\\{escaped}'.", backslashColumn);
                         break;
                 }
 
@@ -237,27 +252,55 @@ public class Scanner
 
     private void ScanNumber()
     {
-        while (IsDigit(Peek()))
-            Advance();
+        // if we came from a leading dot (".5") the dot is already consumed
+        bool startsWithDot = source[start] == '.';
 
-        // Decimal part only if '.' is followed by a digit.
-        if (Peek() == '.' && IsDigit(PeekNext()))
+        ConsumeDigits();
+
+        // Parses the decimal fraction part if the dot is followed by a digit.
+        if (!startsWithDot && Peek() == '.' && IsDigit(PeekNext()))
         {
             Advance();
 
-            while (IsDigit(Peek()))
-                Advance();
+            ConsumeDigits();
         }
 
-        string text = source.Substring(start, current - start);
+        // Reports numbers incorrectly attached to letters or underscores as invalid tokens.
+        if (IsAlphaNumeric(Peek()))
+        {
+            while (IsAlphaNumeric(Peek()))
+                Advance();
 
-        if (double.TryParse(text, out double value))
+            string bad = source.Substring(start, current - start);
+            Error($"Invalid number or identifier '{bad}'. Identifiers cannot start with a digit.");
+            return;
+        }
+
+        // the lexeme keeps the underscores ("1_000"), the value does not (1000)
+        string text = source.Substring(start, current - start).Replace("_", "");
+
+        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double value)
+            && !double.IsInfinity(value))
         {
             AddToken(TokenType.NUMBER, value);
         }
         else
         {
             Error("Invalid number.");
+        }
+    }
+
+    // Consumes valid numeric digits supporting internal underscores like Python.
+    private void ConsumeDigits()
+    {
+        while (true)
+        {
+            if (IsDigit(Peek()))
+                Advance();
+            else if (Peek() == '_' && IsDigit(PeekNext()))
+                Advance();
+            else
+                break;
         }
     }
 
@@ -344,10 +387,50 @@ public class Scanner
         tokens.Add(new Token(type, text, literal, line));
     }
 
-    private void Error(string message)
+    // Reports error details and token trace to stderr while allowing scanning to continue.
+    private void Error(string message, int? column = null)
     {
-        HadError = true;
-        Console.Error.WriteLine($"[line {line}] Error: {message}");
+        ErrorCount++;
+        int col = column ?? startColumn;
+
+        Console.Error.WriteLine($"[line {line}, col {col}] Error: {message}");
+
+        int end = source.IndexOf('\n', lineStart);
+        if (end < 0)
+            end = source.Length;
+        string text = source.Substring(lineStart, end - lineStart).TrimEnd('\r').Replace('\t', ' ');
+        string gutter = line.ToString();
+        Console.Error.WriteLine($"  {gutter} | {text}");
+        Console.Error.WriteLine($"  {new string(' ', gutter.Length)} | {new string(' ', Math.Max(col - 1, 0))}^");
+
+        PrintTrace();
+    }
+
+    private void PrintTrace()
+    {
+        // tokens only has what we managed to scan up to this point
+        Console.Error.WriteLine(
+            $"  Trace: {line - 1} earlier line(s) read, {tokens.Count} token(s) scanned before this error:");
+
+        // only show the last few lines so a big file doesn't flood the screen
+        const int maxLinesShown = 5;
+        var earlier = tokens.Where(t => t.Line < line).GroupBy(t => t.Line).ToList();
+        int hidden = Math.Max(0, earlier.Count - maxLinesShown);
+
+        if (hidden > 0)
+            Console.Error.WriteLine($"    ... ({hidden} earlier line(s) with tokens not shown)");
+
+        foreach (var group in earlier.Skip(hidden))
+            Console.Error.WriteLine($"    line {group.Key}: {Summarize(group)}");
+
+        var thisLine = tokens.Where(t => t.Line == line).ToList();
+        string soFar = thisLine.Count > 0 ? Summarize(thisLine) + " " : "";
+        Console.Error.WriteLine($"    line {line}: {soFar}<-- error here");
+    }
+
+    private static string Summarize(IEnumerable<Token> lineTokens)
+    {
+        return string.Join(" ", lineTokens.Select(t => $"{t.Type}({t.Lexeme})"));
     }
 
     private static bool IsDigit(char c)
