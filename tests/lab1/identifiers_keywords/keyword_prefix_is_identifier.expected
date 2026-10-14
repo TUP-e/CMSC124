@@ -1,0 +1,6 @@
+Token(type=IDENTIFIER, lexeme="classy", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="iffy", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="_if", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="returned", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="nilly", literal=null, line=1)
+Token(type=EOF, lexeme="", literal=null, line=1)

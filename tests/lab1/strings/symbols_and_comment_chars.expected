@@ -1,0 +1,2 @@
+Token(type=STRING, lexeme=""a + b == c // not a comment"", literal=a + b == c // not a comment, line=1)
+Token(type=EOF, lexeme="", literal=null, line=1)

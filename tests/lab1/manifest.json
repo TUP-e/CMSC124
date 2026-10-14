@@ -1,0 +1,6 @@
+{
+  "ext": ".colt",
+  "mode": "sidecar",
+  "flag": "--tokenize",
+  "run_entrypoint": "./run"
+}

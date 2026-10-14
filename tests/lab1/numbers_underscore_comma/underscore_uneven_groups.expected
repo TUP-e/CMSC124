@@ -1,0 +1,2 @@
+Token(type=NUMBER, lexeme="12_34_5", literal=12345, line=1)
+Token(type=EOF, lexeme="", literal=null, line=1)

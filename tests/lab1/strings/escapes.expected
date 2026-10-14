@@ -1,0 +1,2 @@
+Token(type=STRING, lexeme=""a\nb\tc\"d\\e"", literal=a\nb\tc\"d\\e, line=1)
+Token(type=EOF, lexeme="", literal=null, line=1)

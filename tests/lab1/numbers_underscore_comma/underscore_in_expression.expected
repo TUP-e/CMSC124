@@ -1,0 +1,6 @@
+Token(type=IDENTIFIER, lexeme="score", literal=null, line=1)
+Token(type=EQUAL, lexeme="=", literal=null, line=1)
+Token(type=NUMBER, lexeme="1_000", literal=1000, line=1)
+Token(type=PLUS, lexeme="+", literal=null, line=1)
+Token(type=NUMBER, lexeme="2_500", literal=2500, line=1)
+Token(type=EOF, lexeme="", literal=null, line=1)

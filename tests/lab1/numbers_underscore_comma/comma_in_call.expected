@@ -1,0 +1,7 @@
+Token(type=IDENTIFIER, lexeme="spawn", literal=null, line=1)
+Token(type=LEFT_PAREN, lexeme="(", literal=null, line=1)
+Token(type=NUMBER, lexeme="1", literal=1, line=1)
+Token(type=COMMA, lexeme=",", literal=null, line=1)
+Token(type=NUMBER, lexeme="2", literal=2, line=1)
+Token(type=RIGHT_PAREN, lexeme=")", literal=null, line=1)
+Token(type=EOF, lexeme="", literal=null, line=1)

@@ -1,0 +1,7 @@
+Token(type=IDENTIFIER, lexeme="x", literal=null, line=1)
+Token(type=EQUAL, lexeme="=", literal=null, line=1)
+Token(type=NUMBER, lexeme="1", literal=1, line=1)
+Token(type=IDENTIFIER, lexeme="y", literal=null, line=3)
+Token(type=EQUAL, lexeme="=", literal=null, line=3)
+Token(type=NUMBER, lexeme="2", literal=2, line=3)
+Token(type=EOF, lexeme="", literal=null, line=4)

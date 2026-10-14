@@ -1,0 +1,7 @@
+Token(type=IDENTIFIER, lexeme="player", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="Player", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="player1", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="_player", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="enemy_health", literal=null, line=1)
+Token(type=IDENTIFIER, lexeme="_", literal=null, line=1)
+Token(type=EOF, lexeme="", literal=null, line=1)
