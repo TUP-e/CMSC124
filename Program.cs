@@ -20,6 +20,11 @@ if (args[0] == "--tokenize")
         var scanner = new Scanner(source);
         var tokens = scanner.ScanTokens();
 
+        foreach (var token in tokens)
+        {
+            Console.WriteLine(token);
+        }
+
         if (scanner.HadError)
         {
             Console.Error.WriteLine(
@@ -27,12 +32,6 @@ if (args[0] == "--tokenize")
                 $"{tokens.Count - 1} valid token(s), {scanner.ErrorCount} error(s).");
 
             Environment.ExitCode = 65;
-            return;
-        }
-
-        foreach (var token in tokens)
-        {
-            Console.WriteLine(token);
         }
     }
     catch (Exception ex)
