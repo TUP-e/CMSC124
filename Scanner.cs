@@ -62,7 +62,7 @@ public class Scanner
             ScanToken();
         }
 
-        tokens.Add(new Token(TokenType.EOF, "", null, line));
+        tokens.Add(new Token(TokenType.EOF, "", null, line, current - lineStart + 1));
 
         return tokens;
     }
@@ -389,7 +389,7 @@ public class Scanner
     private void AddToken(TokenType type, object? literal)
     {
         string text = source.Substring(start, current - start);
-        tokens.Add(new Token(type, text, literal, line));
+        tokens.Add(new Token(type, text, literal, line, startColumn));
     }
 
     // Reports error details and token trace to stderr while allowing scanning to continue.

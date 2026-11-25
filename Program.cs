@@ -43,7 +43,48 @@ if (args[0] == "--tokenize")
     return;
 }
 
-// Keep Lab 0 behavior for now
+if (args[0] == "--parse")
+{
+    if (args.Length != 2)
+    {
+        Console.Error.WriteLine("Usage: ./run --parse <file>");
+        Environment.ExitCode = 65;
+        return;
+    }
+
+    try
+    {
+        string source = File.ReadAllText(args[1]);
+        var scanner = new Scanner(source);
+        var tokens = scanner.ScanTokens();
+
+        if (scanner.HadError)
+        {
+            Environment.ExitCode = 65;
+            return;
+        }
+
+        var parser = new Parser(tokens, source);
+        var expressions = parser.Parse();
+        if (parser.HadError)
+        {
+            Environment.ExitCode = 65;
+            return;
+        }
+
+        foreach (Expr expression in expressions)
+            Console.WriteLine(AstPrinter.Print(expression));
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error: {ex.Message}");
+        Environment.ExitCode = 65;
+    }
+
+    return;
+}
+
+// Program execution arrives in Lab 4.
 Console.WriteLine("CMSC124 DUO Tope & Josef");
 
 static void RunRepl()
@@ -63,9 +104,10 @@ static void RunRepl()
         if (scanner.HadError)
             continue;
 
-        foreach (var token in tokens)
-        {
-            Console.WriteLine(token);
-        }
+        var parser = new Parser(tokens, line);
+        var expressions = parser.Parse();
+        if (!parser.HadError)
+            foreach (Expr expression in expressions)
+                Console.WriteLine(AstPrinter.Print(expression));
     }
 }
