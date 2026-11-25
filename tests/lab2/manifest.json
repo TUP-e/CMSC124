@@ -1,0 +1,6 @@
+{
+  "ext": ".colt",
+  "mode": "sidecar",
+  "flag": "--parse",
+  "run_entrypoint": "./run"
+}
