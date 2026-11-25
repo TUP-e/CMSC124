@@ -1,3 +1,5 @@
+using System.Globalization;
+
 public class Token
 {
     public TokenType Type { get; }
@@ -27,7 +29,7 @@ public class Token
             return boolean ? "true" : "false";
 
         if (Literal is double number)
-            return number.ToString();
+            return number.ToString(CultureInfo.InvariantCulture);
 
         if (Literal is string text)
         {
