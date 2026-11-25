@@ -25,9 +25,9 @@ The inspiration and target users for this language are aspiring game developers 
 |---|---|
 | `./run <file>` | Executes a program. Program execution arrives in Lab 4; until then this prints the Lab 0 line. |
 | `./run --tokenize <file>` | Prints the token stream, one `Token(...)` line per token. |
-| `./run --parse <file>` | Prints the parsed expression tree. Added in Lab 2. |
+| `./run --parse <file>` | Parses each expression and prints its AST. Added in Lab 2. |
 | `./run --eval <file>` | Evaluates each expression and prints its value. Added in Lab 3. |
-| `./run` | Starts the REPL. At present it prints the tokens of each line. |
+| `./run` | Starts the REPL, which prints the parsed expression for each line. |
 
 
 Exit codes:
@@ -246,18 +246,40 @@ The format is frozen as of Lab 1. Any change must be recorded in the changelog.
 ## Grammar
 
 ```
-[Your complete context-free grammar, current as of the latest activity.
-Unambiguous, with precedence and associativity encoded in rule structure.]
+expression  → equality
+equality    → comparison ( ( "==" | "!=" ) comparison )*
+comparison  → term ( ( ">" | ">=" | "<" | "<=" ) term )*
+term        → factor ( ( "+" | "-" ) factor )*
+factor      → unary ( ( "*" | "/" | "%" ) unary )*
+unary       → ( "!" | "-" ) unary | primary
+primary     → NUMBER | STRING | "true" | "false" | "nil"
+            | "(" expression ")"
 ```
+
+Precedence from lowest to highest is equality, comparison, addition and
+subtraction, multiplication/division/remainder, unary, and primary. Binary
+operators associate left; unary operators associate right. Each non-empty
+line is one expression. An expression may continue on the next line when the
+previous line ends with an operator or `(`. A line beginning with an operator
+starts a new expression and is a syntax error. The Lab 2 parser accepts the
+literal and operator forms above; other reserved words and tokens are not yet
+part of its grammar.
 
 ## Parse output format
 
 ```
-[one line of real --parse output, e.g. (+ 1.0 (* 2.0 3.0))]
+(+ 2.0 (* 3.0 4.0))
+(* (group (+ 2.0 3.0)) 4.0)
 ```
 
-- Groupings print as: [form]
-- Numbers print as: [form]
+- Operators are printed before their operands in prefix, parenthesized form.
+- Explicit groupings print as `(group expression)`.
+- Numbers print with at least one fractional digit (`1.0`); strings are quoted
+  and escape backslash, newline, tab, and double quote. Booleans print as
+  `true` or `false`; nil prints as `nil`.
+- A file with a syntax error prints no parsed expressions to stdout, reports
+  each error with a line, column, source line, and caret on stderr, and exits
+  65.
 
 ## Semantics
 
@@ -401,8 +423,8 @@ Token(type=EOF, lexeme="", literal=null, line=3)
 
 ## Known limitations
 
-- The parser, evaluator, statements, functions, and classes are scheduled for Labs 2–5. Only the scanner is implemented as of Lab 1.
-- `--parse`, `--eval`, and plain program execution are documented but not available until Labs 2–4.
+- The parser handles Lab 2 expressions. Evaluation, statements, functions, and classes are scheduled for Labs 3–5.
+- `--eval` and plain program execution are not available until Labs 3–4.
 - `for` and `in` are reserved, but their loop syntax is not implemented in Lab 1.
 - No block comments, no multiline strings, no exponent notation, and no comma digit separators.
 - Identifiers are ASCII-only; Unicode identifiers are not supported.
@@ -415,3 +437,4 @@ Token(type=EOF, lexeme="", literal=null, line=3)
 | Activity | What changed in the language |
 |---|---|
 | Lab 1 | Added `var`, `def`, `and`, `or`, and `in` to the reserved words; retained `for` as a keyword by the group's current decision. Froze the token output format and the lexical rules for numbers, strings, comments, and line-based termination. Documented the partial token dump on lexical errors. |
+| Lab 2 | Added an expression grammar and recursive descent parser for literals, grouping, unary operators, arithmetic, and comparisons. `--parse` prints prefix parenthesized ASTs, formats numbers with a fractional digit, and rejects syntax errors with exit 65. |
