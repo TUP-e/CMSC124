@@ -63,8 +63,8 @@ Collective uses a simple, dynamically typed lexical structure designed for begin
 | `if`       | Starts a conditional statement.                             |
 | `else`     | Provides an alternative branch for a conditional statement. |
 | `while`    | Starts a while loop.                                        |
-| `for`      | Starts a `for`-`in` loop over a string or list.             |
-| `in`       | Separates the loop variable from the iterable in a `for` loop. |
+| `for`      | Reserved keyword retained for now; its syntax is not implemented yet. |
+| `in`       | Reserved for possible `for`-`in` syntax.                    |
 | `return`   | Returns a value from a method or function.                  |
 | `break`    | Immediately exits the nearest loop.                         |
 | `continue` | Skips the remainder of the current loop iteration.          |
@@ -90,6 +90,59 @@ Collective uses a simple, dynamically typed lexical structure designed for begin
 
 
 The scanner recognizes both single-character operators and their multi-character forms. All binary operators are left-associative except assignment, which is right-associative. Precedence is encoded in the grammar added in Lab 2.
+
+### Token inventory
+
+The scanner emits 46 token types, including `EOF`, which is emitted once at the end of every file. `FOR` remains reserved by the group's current decision; its loop syntax is not part of the scanner's responsibilities. This updates the draft lab plan's recommendation to drop `for`.
+
+| Token type | Example lexeme | Purpose |
+|---|---|---|
+| `LEFT_PAREN` | `(` | Opens a grouped expression or argument/parameter list. |
+| `RIGHT_PAREN` | `)` | Closes a group or argument/parameter list. |
+| `LEFT_BRACE` | `{` | Opens a block or class body. |
+| `RIGHT_BRACE` | `}` | Closes a block or class body. |
+| `DOT` | `.` | Member-access punctuation. |
+| `COMMA` | `,` | Separates arguments and parameters. |
+| `PLUS` | `+` | Addition or unary plus syntax. |
+| `MINUS` | `-` | Subtraction or unary negation. |
+| `STAR` | `*` | Multiplication. |
+| `SLASH` | `/` | Division; `//` begins a line comment. |
+| `PERCENT` | `%` | Remainder. |
+| `EQUAL` | `=` | Assignment. |
+| `EQUAL_EQUAL` | `==` | Equality comparison. |
+| `NOT` | `!` | Logical negation. |
+| `NOT_EQUAL` | `!=` | Inequality comparison. |
+| `LESS` | `<` | Less-than comparison. |
+| `LESS_EQUAL` | `<=` | Less-than-or-equal comparison. |
+| `GREATER` | `>` | Greater-than comparison. |
+| `GREATER_EQUAL` | `>=` | Greater-than-or-equal comparison. |
+| `IDENTIFIER` | `player` | User-defined name that is not a reserved word. |
+| `STRING` | `"hello"` | Double-quoted string literal. |
+| `NUMBER` | `42`, `.5` | Numeric literal. |
+| `CLASS` | `class` | Class declaration. |
+| `EXTENDS` | `extends` | Class inheritance clause. |
+| `NEW` | `new` | Instance-creation expression. |
+| `THIS` | `this` | Current-instance reference. |
+| `PUBLIC` | `public` | Public member visibility. |
+| `PRIVATE` | `private` | Private member visibility. |
+| `ABSTRACT` | `abstract` | Abstract class or method declaration. |
+| `VAR` | `var` | Variable declaration. |
+| `DEF` | `def` | Function or method declaration. |
+| `PRINT` | `print` | Value-output statement. |
+| `IF` | `if` | Conditional statement. |
+| `ELSE` | `else` | Alternate conditional branch. |
+| `WHILE` | `while` | While-loop statement. |
+| `FOR` | `for` | Reserved keyword retained for now; syntax is not implemented yet. |
+| `IN` | `in` | Reserved for possible `for`-`in` syntax. |
+| `RETURN` | `return` | Function or method return statement. |
+| `BREAK` | `break` | Exits the nearest loop. |
+| `CONTINUE` | `continue` | Skips to the next loop iteration. |
+| `AND` | `and` | Short-circuiting logical conjunction. |
+| `OR` | `or` | Short-circuiting logical disjunction. |
+| `TRUE` | `true` | Boolean true literal. |
+| `FALSE` | `false` | Boolean false literal. |
+| `NIL` | `nil` | Absence-of-value literal. |
+| `EOF` | *(empty)* | End-of-file marker used by the parser. |
 
 ### Literals
 
@@ -300,11 +353,12 @@ Runtime errors keep the same `[line N, col C]` message prefix and exit 70; the e
 
 Each source file under `tests/lab1` is paired with a `.expected` file holding the exact stdout of `./run --tokenize`. A rejected file also has a `.exit` file containing `65`. Expectations are read and signed off, never regenerated blindly. The folder covers keywords, identifiers, numbers (leading dot, trailing dot, underscores, commas), strings and escapes, comments, whitespace and line tracking, multi-character operators with their single-character neighbors, and error recovery.
 
-Run locally with:
+On Windows, run these commands from Git Bash; on Linux/macOS, run them from Bash:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/WhiteLicorice/cmsc-124-harness/v1.1/run_tests.py -o run_tests.py
 ./build.sh
+python3 run_tests.py tests/lab0
 python3 run_tests.py tests/lab1
 ```
 
@@ -339,7 +393,7 @@ Token(type=EOF, lexeme="", literal=null, line=3)
 - **No semicolons.** Newlines already exist in every source file, the scanner already tracks them, and a beginner is more likely to forget a terminator than to miscount a line. The parser uses token line numbers instead of a `NEWLINE` token, which keeps the scanner and the token output simple. Expressions continue onto the next line only when the previous line ends with an operator, `(`, `,`, `=`, or `.`; that rule makes continuation visible at the end of the line instead of hiding it at the start of the next one.
 - **Word logical operators.** `and` and `or` read like English and match the target audience. `!` and `!=` stay because they are already familiar and removing them would make unary negation and inequality inconsistent.
 - **OOP keywords reserved early.** Classes, inheritance, and access control are the language's premise, so the scanner reserves all seven words from the beginning. Reserving them now means one stable token vocabulary across the labs and no later renaming of user identifiers. `var` and `def` join them so bindings and functions are always explicit: assignment updates an existing name, and a typo is a runtime error instead of a silent new binding.
-- **Python-style `for`.** `for item in items` avoids a C-style header and the semicolons it would drag into a line-based language. Iteration over strings and lists covers the useful cases without adding indexing or mutation yet.
+- **Keep `for` reserved for now.** The draft lab plan recommended dropping it, but the current group decision is to retain the keyword while its eventual loop syntax remains undecided. This keeps the scanner vocabulary stable until that syntax is settled.
 - **Numeric ergonomics.** `.5` is accepted because it is readable; `5.` is split into a number and a dot so member access such as `5.toString` stays unambiguous. Underscores group digits the way Python does, while commas are rejected as separators because they already separate arguments.
 - **Small string escape set.** `\n`, `\t`, `\"`, and `\\` cover the common cases. An invalid escape is reported rather than silently dropped, because a string that quietly loses a character is harder to debug than a rejected file.
 - **Stable token dump.** A fixed, grep-able `Token(...)` format lets every lab compare exact output and makes scanner regressions visible in CI.
@@ -349,7 +403,7 @@ Token(type=EOF, lexeme="", literal=null, line=3)
 
 - The parser, evaluator, statements, functions, and classes are scheduled for Labs 2–5. Only the scanner is implemented as of Lab 1.
 - `--parse`, `--eval`, and plain program execution are documented but not available until Labs 2–4.
-- `for` and `in` are reserved, but `for` loops and list literals arrive in Lab 5. Until then they are keywords without grammar.
+- `for` and `in` are reserved, but their loop syntax is not implemented in Lab 1.
 - No block comments, no multiline strings, no exponent notation, and no comma digit separators.
 - Identifiers are ASCII-only; Unicode identifiers are not supported.
 - A rejected file prints its partial token dump to stdout before exiting 65. This is deliberate and was confirmed with the instructor; the Lab 1 manual's default says nothing rejected belongs on stdout.
@@ -360,4 +414,4 @@ Token(type=EOF, lexeme="", literal=null, line=3)
 
 | Activity | What changed in the language |
 |---|---|
-| Lab 1 | Added `var`, `def`, `and`, `or`, and `in` to the reserved words. Froze the token output format and the lexical rules for numbers, strings, comments, and line-based termination. Documented the partial token dump on lexical errors. |
+| Lab 1 | Added `var`, `def`, `and`, `or`, and `in` to the reserved words; retained `for` as a keyword by the group's current decision. Froze the token output format and the lexical rules for numbers, strings, comments, and line-based termination. Documented the partial token dump on lexical errors. |
