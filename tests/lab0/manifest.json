@@ -1,5 +1,5 @@
 {
-  "ext": ".uhh",
+  "ext": ".colt",
   "mode": "sidecar",
   "run_entrypoint": "./run"
 }
