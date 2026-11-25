@@ -37,6 +37,8 @@ public enum TokenType
     PUBLIC,
     PRIVATE,
     ABSTRACT,
+    VAR,
+    DEF,
     PRINT,
 
     // Control flow keywords
@@ -44,9 +46,12 @@ public enum TokenType
     ELSE,
     WHILE,
     FOR,
+    IN,
     RETURN,
     BREAK,
     CONTINUE,
+    AND,
+    OR,
     TRUE,
     FALSE,
     NIL,

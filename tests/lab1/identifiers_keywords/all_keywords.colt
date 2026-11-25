@@ -1,1 +1,1 @@
-class extends new this public private abstract print if else while for return break continue true false nil
+class extends new this public private abstract var def print if else while for in return break continue and or true false nil
