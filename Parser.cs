@@ -27,7 +27,7 @@ public sealed class Parser
 
         for (int i = 0; i < tokens.Count - 1; i++)
         {
-            if (IsLineBoundary(i, start))
+            if (IsLineBoundary(i))
             {
                 ParseChunk(start, i, expressions);
                 start = i;
@@ -38,24 +38,18 @@ public sealed class Parser
         return HadError ? Array.Empty<Expr>() : expressions;
     }
 
-    private bool IsLineBoundary(int index, int chunkStart)
+    private bool IsLineBoundary(int index)
     {
         if (index == 0)
             return false;
 
         Token previous = tokens[index - 1];
         Token next = tokens[index];
-        if (previous.Line == next.Line || previous.Type == TokenType.LEFT_PAREN)
+        if (previous.Line == next.Line)
             return false;
 
-        int depth = 0;
-        for (int i = chunkStart; i < index; i++)
-        {
-            if (tokens[i].Type == TokenType.LEFT_PAREN) depth++;
-            else if (tokens[i].Type == TokenType.RIGHT_PAREN) depth--;
-        }
-
-        return depth == 0 && !CanContinue(tokens[index - 1].Type);
+        // A complete line is also a recovery point if a group was left unclosed.
+        return !CanContinue(previous.Type);
     }
 
     private static bool CanContinue(TokenType type) => type is
