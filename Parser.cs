@@ -9,6 +9,7 @@ public sealed record GroupingExpr(Expr Expression) : Expr;
 public sealed class Parser
 {
     private readonly List<Token> tokens;
+    private readonly string source;
     private readonly string[] sourceLines;
     private int current;
 
@@ -17,6 +18,7 @@ public sealed class Parser
     public Parser(List<Token> tokens, string source)
     {
         this.tokens = tokens;
+        this.source = source;
         sourceLines = source.Replace("\r\n", "\n").Split('\n');
     }
 
@@ -55,7 +57,8 @@ public sealed class Parser
     private static bool CanContinue(TokenType type) => type is
         TokenType.PLUS or TokenType.MINUS or TokenType.STAR or TokenType.SLASH or TokenType.PERCENT or
         TokenType.EQUAL_EQUAL or TokenType.NOT_EQUAL or TokenType.LESS or TokenType.LESS_EQUAL or
-        TokenType.GREATER or TokenType.GREATER_EQUAL or TokenType.NOT or TokenType.LEFT_PAREN or TokenType.COMMA;
+        TokenType.GREATER or TokenType.GREATER_EQUAL or TokenType.NOT or TokenType.AND or TokenType.OR or
+        TokenType.LEFT_PAREN or TokenType.COMMA;
 
     private void ParseChunk(int start, int end, List<Expr> expressions)
     {
@@ -85,7 +88,29 @@ public sealed class Parser
         }
     }
 
-    private Expr Expression() => Equality();
+    private Expr Expression() => LogicOr();
+
+    private Expr LogicOr()
+    {
+        Expr expression = LogicAnd();
+        while (Match(TokenType.OR))
+        {
+            Token op = Previous();
+            expression = new BinaryExpr(expression, op, LogicAnd());
+        }
+        return expression;
+    }
+
+    private Expr LogicAnd()
+    {
+        Expr expression = Equality();
+        while (Match(TokenType.AND))
+        {
+            Token op = Previous();
+            expression = new BinaryExpr(expression, op, Equality());
+        }
+        return expression;
+    }
 
     private Expr Equality()
     {
