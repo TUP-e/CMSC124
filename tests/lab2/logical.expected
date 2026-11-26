@@ -1,0 +1,8 @@
+(and true false)
+(or false true)
+(and (< 1.0 2.0) (< 2.0 3.0))
+(or true (and false false))
+(or (and false true) true)
+(or (and (>= (+ 1.0 (* 2.0 3.0)) 7.0) true) false)
+(and true false)
+(or false true)
