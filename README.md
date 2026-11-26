@@ -89,7 +89,7 @@ Collective uses a simple, dynamically typed lexical structure designed for begin
 | `.` `()` | member access / call | postfix | left     | 9 (highest)   |
 
 
-The scanner recognizes both single-character operators and their multi-character forms. All binary operators are left-associative except assignment, which is right-associative. Precedence is encoded in the grammar added in Lab 2.
+The scanner recognizes both single-character operators and their multi-character forms. All binary operators are left-associative except assignment, which is right-associative. The Lab 2 parser implements the logical, equality, comparison, additive, multiplicative, and unary levels plus grouping; assignment and postfix member access/calls are reserved for later labs. Precedence for the implemented subset is encoded in the grammar below.
 
 ### Token inventory
 
@@ -217,7 +217,7 @@ Examples of invalid identifiers:
 * Spaces, tabs, and carriage returns are discarded by the scanner.
 * Newlines are not emitted as tokens, but they increment the line counter and mark the end of a statement.
 * Blank lines and leading or trailing whitespace are ignored.
-* Statements are line-based. A statement ends at a line break; an expression continues onto the next line only when the previous line ends with an operator, `(`, `,`, `=`, or `.`.
+* Statements are line-based. A statement ends at a line break; in Lab 2 an expression continues onto the next line only when the previous line ends with an implemented operator (`+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<`, `<=`, `>`, `>=`, `!`, `and`, `or`), `(`, or `,`. Continuation after `=` and `.` arrives with assignment and member access in later labs.
 * There is no semicolon terminator. `;` is an unrecognized character.
 * Blocks are delimited by `{` and `}`.
 * Grouped expressions, method calls, and parameter lists use `(` and `)`.
@@ -246,7 +246,9 @@ The format is frozen as of Lab 1. Any change must be recorded in the changelog.
 ## Grammar
 
 ```
-expression  → equality
+expression  → logic_or
+logic_or    → logic_and ( "or" logic_and )*
+logic_and   → equality ( "and" equality )*
 equality    → comparison ( ( "==" | "!=" ) comparison )*
 comparison  → term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term        → factor ( ( "+" | "-" ) factor )*
@@ -256,14 +258,17 @@ primary     → NUMBER | STRING | "true" | "false" | "nil"
             | "(" expression ")"
 ```
 
-Precedence from lowest to highest is equality, comparison, addition and
-subtraction, multiplication/division/remainder, unary, and primary. Binary
-operators associate left; unary operators associate right. Each non-empty
-line is one expression. An expression may continue on the next line when the
-previous line ends with an operator or `(`. A line beginning with an operator
-starts a new expression and is a syntax error. The Lab 2 parser accepts the
-literal and operator forms above; other reserved words and tokens are not yet
-part of its grammar.
+Precedence from lowest to highest is logical OR, logical AND, equality,
+comparison, addition and subtraction, multiplication/division/remainder,
+unary, and primary. Binary operators associate left; unary operators associate
+right. Each non-empty line is one expression. An expression may continue on
+the next line when the previous line ends with one of the implemented operators
+(`+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<`, `<=`, `>`, `>=`, `!`, `and`, `or`),
+`(`, or `,`. A line beginning with an operator starts a new expression and is
+a syntax error. An empty file or a file containing only comments is accepted
+and produces no output. The Lab 2 parser accepts only the literal and operator
+forms above; assignment, member access, calls, `this`, and `new` are reserved
+for later labs.
 
 ## Parse output format
 
@@ -412,8 +417,9 @@ Token(type=EOF, lexeme="", literal=null, line=3)
 
 ## Design rationale
 
-- **No semicolons.** Newlines already exist in every source file, the scanner already tracks them, and a beginner is more likely to forget a terminator than to miscount a line. The parser uses token line numbers instead of a `NEWLINE` token, which keeps the scanner and the token output simple. Expressions continue onto the next line only when the previous line ends with an operator, `(`, `,`, `=`, or `.`; that rule makes continuation visible at the end of the line instead of hiding it at the start of the next one.
-- **Word logical operators.** `and` and `or` read like English and match the target audience. `!` and `!=` stay because they are already familiar and removing them would make unary negation and inequality inconsistent.
+- **No semicolons.** Newlines already exist in every source file, the scanner already tracks them, and a beginner is more likely to forget a terminator than to miscount a line. The parser uses token line numbers instead of a `NEWLINE` token, which keeps the scanner and the token output simple. In Lab 2, expressions continue onto the next line only when the previous line ends with an implemented operator, including `and` and `or`, or with `(` or `,`; continuation after `=` and `.` arrives with assignment and member access in later labs. That rule makes continuation visible at the end of the line instead of hiding it at the start of the next one.
+- **Syntax error synchronization.** Line splitting follows the previous token instead of the open-parenthesis depth: a line break after a complete operand ends that expression even if an opening `(` is unmatched. The parser reports the missing `)` and resumes at the next expression line; only a trailing operator, `(`, or `,` continues the expression. This keeps one malformed group from consuming the rest of the file.
+- **Word logical operators.** `and` and `or` read like English and match the target audience; the Lab 2 parser implements them with `and` binding tighter than `or`. `!` and `!=` stay because they are already familiar and removing them would make unary negation and inequality inconsistent.
 - **OOP keywords reserved early.** Classes, inheritance, and access control are the language's premise, so the scanner reserves all seven words from the beginning. Reserving them now means one stable token vocabulary across the labs and no later renaming of user identifiers. `var` and `def` join them so bindings and functions are always explicit: assignment updates an existing name, and a typo is a runtime error instead of a silent new binding.
 - **Keep `for` reserved for now.** The draft lab plan recommended dropping it, but the current group decision is to retain the keyword while its eventual loop syntax remains undecided. This keeps the scanner vocabulary stable until that syntax is settled.
 - **Numeric ergonomics.** `.5` is accepted because it is readable; `5.` is split into a number and a dot so member access such as `5.toString` stays unambiguous. Underscores group digits the way Python does, while commas are rejected as separators because they already separate arguments.
@@ -423,7 +429,7 @@ Token(type=EOF, lexeme="", literal=null, line=3)
 
 ## Known limitations
 
-- The parser handles Lab 2 expressions. Evaluation, statements, functions, and classes are scheduled for Labs 3–5.
+- The Lab 2 parser handles literals, grouping, unary operators, logical `and`/`or`, and the arithmetic/comparison/equality operators in the grammar above. Assignment, member access, calls, `this`, and `new` are not parsed yet. Evaluation, statements, functions, and classes are scheduled for Labs 3–5.
 - `--eval` and plain program execution are not available until Labs 3–4.
 - `for` and `in` are reserved, but their loop syntax is not implemented in Lab 1.
 - No block comments, no multiline strings, no exponent notation, and no comma digit separators.
@@ -437,4 +443,4 @@ Token(type=EOF, lexeme="", literal=null, line=3)
 | Activity | What changed in the language |
 |---|---|
 | Lab 1 | Added `var`, `def`, `and`, `or`, and `in` to the reserved words; retained `for` as a keyword by the group's current decision. Froze the token output format and the lexical rules for numbers, strings, comments, and line-based termination. Documented the partial token dump on lexical errors. |
-| Lab 2 | Added an expression grammar and recursive descent parser for literals, grouping, unary operators, arithmetic, and comparisons. `--parse` prints prefix parenthesized ASTs, formats numbers with a fractional digit, and rejects syntax errors with exit 65. |
+| Lab 2 | Added an expression grammar and recursive descent parser for literals, grouping, unary operators, logical `and`/`or`, arithmetic (including `%`), and comparisons. `--parse` prints prefix parenthesized ASTs, formats numbers with a fractional digit, and rejects syntax errors with exit 65. Assignment and postfix member/call syntax remain reserved for later labs. |
